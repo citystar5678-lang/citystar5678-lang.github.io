@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Local Real Estate Market Trends</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Analyze local real estate market trends by ZIP code or city.">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            background: #f7f9fb;
+            color: #1f2933;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            padding: 70px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.4rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            max-width: 800px;
+            margin: auto;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        section {
+            padding: 70px 20px;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 35px;
+            border-radius: 14px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        .result {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .metric {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            margin-bottom: 15px;
+        }
+
+        .metric span {
+            color: #4b5563;
+        }
+
+        a {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .back {
+            margin-top: 40px;
+            display: inline-block;
+        }
+
+        footer {
+            background: #0f172a;
+            color: #cbd5e1;
+            text-align: center;
+            padding: 30px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Local Market Trends</h1>
+    <p>
+        Enter a ZIP code or city name to view high-level residential
+        real estate market trends.
+    </p>
+</header>
+
+<section>
+    <div class="card">
+        <h2>Search Market</h2>
+
+        <label for="location">ZIP Code or City</label>
+        <input id="location" type="text" placeholder="e.g. 94110 or Austin, TX">
+
+        <button onclick="generateTrends()">View Market Trends</button>
+
+        <div id="result" class="result">
+            <h2>Market Snapshot</h2>
+
+            <div class="metric">
+                <span>Median Home Price</span>
+                <strong id="price"></strong>
+            </div>
+
+            <div class="metric">
+                <span>Price Trend (YoY)</span>
+                <strong id="trend"></strong>
+            </div>
+
+            <div class="metric">
+                <span>Average Days on Market</span>
+                <strong id="dom"></strong>
+            </div>
+
+            <div class="metric">
+                <span>Rental Demand</span>
+                <strong id="rent"></strong>
+            </div>
+
+            <p style="margin-top:20px; color:#6b7280;">
+                * Sample data shown for demonstration purposes.
+            </p>
+        </div>
+    </div>
+
+    <a class="back" href="index.html">← Back to Real Estate</a>
+</section>
+
+<footer>
+    © 2025 • Real Estate Market Analysis
+</footer>
+
+<script>
+    function generateTrends() {
+        const location = document.getElementById("location").value.trim();
+        if (!location) {
+            alert("Please enter a ZIP code or city name.");
+            return;
+        }
+
+        // Placeholder demo values
+        document.getElementById("price").innerText = "$" + (350000 + Math.floor(Math.random() * 400000)).toLocaleString();
+        document.getElementById("trend").innerText = (Math.random() * 8 - 2).toFixed(1) + "%";
+        document.getElementById("dom").innerText = Math.floor(20 + Math.random() * 40) + " days";
+        document.getElementById("rent").innerText = Math.random() > 0.5 ? "Strong" : "Moderate";
+
+        document.getElementById("result").style.display = "block";
+    }
+</script>
+
+</body>
+</html>
