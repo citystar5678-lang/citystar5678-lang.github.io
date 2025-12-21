@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+/* ===== Base ===== */
 body {
     font-family: Arial, sans-serif;
     background: #f5f7fa;
@@ -13,6 +14,7 @@ body {
     padding: 0;
 }
 
+/* ===== Header ===== */
 header {
     background: #1f2937;
     color: white;
@@ -20,6 +22,7 @@ header {
     text-align: center;
 }
 
+/* ===== Layout ===== */
 .container {
     max-width: 900px;
     margin: 40px auto;
@@ -28,10 +31,20 @@ header {
     border-radius: 8px;
 }
 
-h2 {
-    margin-top: 0;
+/* ===== Navigation ===== */
+.back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #2563eb;
+    text-decoration: none;
+    font-size: 14px;
 }
 
+.back-link:hover {
+    text-decoration: underline;
+}
+
+/* ===== Forms ===== */
 input {
     width: 100%;
     padding: 12px;
@@ -53,11 +66,13 @@ button:hover {
     background: #1e40af;
 }
 
+/* ===== Results ===== */
 #results {
     margin-top: 30px;
     display: none;
 }
 
+/* ===== Modal ===== */
 .modal {
     position: fixed;
     inset: 0;
@@ -65,6 +80,7 @@ button:hover {
     display: none;
     align-items: center;
     justify-content: center;
+    z-index: 9999;
 }
 
 .modal-content {
@@ -74,6 +90,25 @@ button:hover {
     width: 90%;
     max-width: 400px;
     text-align: center;
+}
+
+/* ===== Footer ===== */
+.site-footer {
+    background: #1f2937;
+    color: #9ca3af;
+    text-align: center;
+    padding: 20px;
+    margin-top: 60px;
+    font-size: 14px;
+}
+
+.site-footer a {
+    color: #9ca3af;
+    text-decoration: none;
+}
+
+.site-footer a:hover {
+    color: white;
 }
 </style>
 </head>
@@ -86,19 +121,19 @@ button:hover {
 </header>
 
 <div class="container">
+
+    <a href="../real-estate.html" class="back-link">← Back to Real Estate</a>
+
     <h2>Analyze Your Market</h2>
     <p>Enter a ZIP code or City, State (example: Austin, TX)</p>
 
     <input id="location" placeholder="ZIP or City, State">
     <button onclick="openEmailGate()">Analyze Market</button>
 
-    
-    
-
     <div id="results"></div>
 </div>
 
-<!-- Email Gate Modal -->
+<!-- ===== Email Gate Modal ===== -->
 <div id="emailModal" class="modal">
     <div class="modal-content">
         <h3>Unlock Market Trends</h3>
@@ -110,20 +145,13 @@ button:hover {
 </div>
 
 <script>
-/* ================================
-   CONFIG
-================================ */
+/* ===== CONFIG ===== */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3f_7nP-qeGhgar3M9lHIkIIMRVPd6F8XVcQP04yYjqQuSA0hsXSqy9Ohmx5u7Xg/exec";
 
-/* ================================
-   STATE
-================================ */
+/* ===== STATE ===== */
 let pendingLocation = {};
-let rawLocationInput = "";
 
-/* ================================
-   HELPERS
-================================ */
+/* ===== HELPERS ===== */
 function parseLocation(input) {
     input = input.trim();
 
@@ -143,9 +171,7 @@ function parseLocation(input) {
     return { city: input, state: "", zip: "" };
 }
 
-/* ================================
-   EMAIL GATE FLOW
-================================ */
+/* ===== EMAIL GATE FLOW ===== */
 function openEmailGate() {
     const locationInput = document.getElementById("location").value;
 
@@ -154,7 +180,6 @@ function openEmailGate() {
         return;
     }
 
-    rawLocationInput = locationInput;
     pendingLocation = parseLocation(locationInput);
 
     if (localStorage.getItem("emailCaptured")) {
@@ -192,16 +217,13 @@ function submitEmail() {
     .catch(() => alert("Submission error. Please try again."));
 }
 
-/* ================================
-   MARKET RESULTS (DEMO DATA)
-================================ */
+/* ===== RESULTS (DEMO DATA) ===== */
 function analyzeMarket() {
     const displayLocation =
         pendingLocation.zip ||
         `${pendingLocation.city}${pendingLocation.state ? ", " + pendingLocation.state : ""}`;
 
     document.getElementById("results").style.display = "block";
-
     document.getElementById("results").innerHTML = `
         <h3>Market Trends for ${displayLocation}</h3>
         <ul>
@@ -214,10 +236,11 @@ function analyzeMarket() {
     `;
 }
 </script>
-<footer>
-    © 2025 • Market Trends
-</footer>
 
+<footer class="site-footer">
+    © 2025 Chia Sung · Real Estate & Construction Analytics
+</footer>
 
 </body>
 </html>
+
