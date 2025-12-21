@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Residential Home Purchase Analyzer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Analyze residential home affordability and purchase viability.">
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            background: #f7f9fb;
+            color: #1f2933;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            padding: 70px 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.4rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            max-width: 850px;
+            margin: auto;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        section {
+            padding: 70px 20px;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 35px;
+            border-radius: 14px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+        }
+
+        button {
+            margin-top: 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        .result {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .metric span {
+            color: #4b5563;
+        }
+
+        .signal {
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .good {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .caution {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .risk {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        a {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        footer {
+            background: #0f172a;
+            color: #cbd5e1;
+            text-align: center;
+            padding: 30px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Residential Home Purchase Analyzer</h1>
+    <p>
+        Evaluate affordability, monthly ownership cost, and financial comfort
+        before committing to a home purchase.
+    </p>
+</header>
+
+<section>
+    <div class="card">
+        <h2>Buyer & Property Inputs</h2>
+
+        <div class="grid">
+            <div>
+                <label>Home Price ($)</label>
+                <input id="price" type="number" value="450000">
+            </div>
+
+            <div>
+                <label>Down Payment (%)</label>
+                <input id="down" type="number" value="20">
+            </div>
+
+            <div>
+                <label>Interest Rate (%)</label>
+                <input id="rate" type="number" value="6.25">
+            </div>
+
+            <div>
+                <label>Loan Term (years)</label>
+                <input id="term" type="number" value="30">
+            </div>
+
+            <div>
+                <label>Annual Household Income ($)</label>
+                <input id="income" type="number" value="120000">
+            </div>
+
+            <div>
+                <label>Monthly Other Debts ($)</label>
+                <input id="debts" type="number" value="600">
+            </div>
+
+            <div>
+                <label>Property Tax (Monthly $)</label>
+                <input id="tax" type="number" value="450">
+            </div>
+
+            <div>
+                <label>Insurance + Maintenance (Monthly $)</label>
+                <input id="ins" type="number" value="250">
+            </div>
+        </div>
+
+        <button onclick="analyze()">Analyze Purchase</button>
+
+        <div id="result" class="result">
+            <h2>Purchase Analysis Summary</h2>
+
+            <div class="metric">
+                <span>Estimated Monthly Mortgage</span>
+                <strong id="mortgage"></strong>
+            </div>
+
+            <div class="metric">
+                <span>Total Monthly Housing Cost</span>
+                <strong id="housing"></strong>
+            </div>
+
+            <div class="metric">
+                <span>Housing Cost % of Income</span>
+                <strong id="ratio"></strong>
+            </div>
+
+            <div class="metric">
+                <span>Debt-to-Income (DTI)</span>
+                <strong id="dti"></strong>
+            </div>
+
+            <div id="signal" class="signal"></div>
+        </div>
+    </div>
+
+    <a href="index.html">← Back to Real Estate</a>
+</section>
+
+<footer>
+    © 2025 • Residential Purchase Analysis
+</footer>
+
+<script>
+    function analyze() {
+        const price = +priceEl.value;
+        const downPct = +downEl.value / 100;
+        const rate = +rateEl.value / 100 / 12;
+        const term = +termEl.value * 12;
+        const income = +incomeEl.value / 12;
+        const debts = +debtsEl.value;
+        const tax = +taxEl.value;
+        const ins = +insEl.value;
+
+        const loan = price * (1 - downPct);
+        const mortgage = loan * rate * Math.pow(1 + rate, term) / (Math.pow(1 + rate, term) - 1);
+        const housing = mortgage + tax + ins;
+
+        const housingRatio = (housing / income) * 100;
+        const dti = ((housing + debts) / income) * 100;
+
+        mortgageEl.innerText = "$" + mortgage.toFixed(0);
+        housingEl.innerText = "$" + housing.toFixed(0);
+        ratioEl.innerText = housingRatio.toFixed(1) + "%";
+        dtiEl.innerText = dti.toFixed(1) + "%";
+
+        let signalText = "";
+        let signalClass = "";
+
+        if (housingRatio <= 28 && dti <= 36) {
+            signalText = "Comfortable Purchase Range";
+            signalClass = "signal good";
+        } else if (housingRatio <= 35 && dti <= 43) {
+            signalText = "Caution: Financial Stretch";
+            signalClass = "signal caution";
+        } else {
+            signalText = "High Risk: Affordability Concern";
+            signalClass = "signal risk";
+        }
+
+        signalEl.innerText = signalText;
+        signalEl.className = signalClass;
+
+        resultEl.style.display = "block";
+    }
+
+    const priceEl = document.getElementById("price");
+    const downEl = document.getElementById("down");
+    const rateEl = document.getElementById("rate");
+    const termEl = document.getElementById("term");
+    const incomeEl = document.getElementById("income");
+    const debtsEl = document.getElementById("debts");
+    const taxEl = document.getElementById("tax");
+    const insEl = document.getElementById("ins");
+
+    const mortgageEl = document.getElementById("mortgage");
+    const housingEl = document.getElementById("housing");
+    const ratioEl = document.getElementById("ratio");
+    const dtiEl = document.getElementById("dti");
+    const signalEl = document.getElementById("signal");
+    const resultEl = document.getElementById("result");
+</script>
+
+</body>
+</html>
