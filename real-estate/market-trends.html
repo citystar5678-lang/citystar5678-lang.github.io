@@ -1,76 +1,107 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Real Estate Market Trends | Local Insights</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Local real estate market trends by city or ZIP code.">
 
 <style>
 /* ===== Base ===== */
 body {
-    font-family: Arial, sans-serif;
-    background: #f5f7fa;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     margin: 0;
-    padding: 0;
+    background: #f7f9fb;
+    color: #1f2933;
 }
 
 /* ===== Header ===== */
 header {
-    background: #1f2937;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
     color: white;
-    padding: 20px;
+    padding: 70px 20px;
     text-align: center;
 }
 
+header h1 {
+    font-size: 2.4rem;
+    margin-bottom: 10px;
+}
+
+header p {
+    max-width: 800px;
+    margin: auto;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
 /* ===== Layout ===== */
-.container {
-    max-width: 900px;
-    margin: 40px auto;
-    padding: 20px;
+section {
+    padding: 70px 20px;
+    max-width: 1000px;
+    margin: auto;
+}
+
+.card {
     background: white;
+    padding: 35px;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+/* ===== Forms ===== */
+label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
     border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    margin-bottom: 16px;
+}
+
+button {
+    margin-top: 10px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    font-size: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #2563eb;
+}
+
+/* ===== Results ===== */
+#results {
+    display: none;
+    margin-top: 30px;
+}
+
+#results ul {
+    padding-left: 20px;
+}
+
+#results li {
+    margin-bottom: 10px;
 }
 
 /* ===== Navigation ===== */
 .back-link {
     display: inline-block;
-    margin-bottom: 20px;
-    color: #2563eb;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.back-link:hover {
-    text-decoration: underline;
-}
-
-
-/* ===== Forms ===== */
-input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    font-size: 16px;
-}
-
-button {
-    padding: 12px 20px;
-    background: #2563eb;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
-}
-
-button:hover {
-    background: #1e40af;
-}
-
-/* ===== Results ===== */
-#results {
     margin-top: 30px;
-    display: none;
+    text-decoration: none;
+    color: #2563eb;
+    font-weight: 600;
 }
 
 /* ===== Modal ===== */
@@ -87,29 +118,20 @@ button:hover {
 .modal-content {
     background: white;
     padding: 30px;
-    border-radius: 8px;
+    border-radius: 14px;
     width: 90%;
-    max-width: 400px;
+    max-width: 420px;
     text-align: center;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
 }
 
 /* ===== Footer ===== */
-.site-footer {
-    background: #1f2937;
-    color: #9ca3af;
+footer {
+    background: #0f172a;
+    color: #cbd5e1;
     text-align: center;
-    padding: 20px;
-    margin-top: 60px;
-    font-size: 14px;
-}
-
-.site-footer a {
-    color: #9ca3af;
-    text-decoration: none;
-}
-
-.site-footer a:hover {
-    color: white;
+    padding: 30px;
+    font-size: 0.9rem;
 }
 </style>
 </head>
@@ -118,24 +140,26 @@ button:hover {
 
 <header>
     <h1>Real Estate Market Trend Analyzer</h1>
-    <p>Local housing trends by city or ZIP code</p>
+    <p>Analyze local housing trends using city or ZIP-level insights</p>
 </header>
 
-<div class="container">
+<section>
+    <div class="card">
+        <h2>Market Input</h2>
+        <p>Enter a ZIP code or City, State (example: Austin, TX)</p>
 
+        <label>Location</label>
+        <input id="location" placeholder="ZIP or City, State">
 
-    <h2>Analyze Your Market</h2>
-    <p>Enter a ZIP code or City, State (example: Austin, TX)</p>
+        <button onclick="openEmailGate()">Analyze Market</button>
 
-    <input id="location" placeholder="ZIP or City, State">
-    <button onclick="openEmailGate()">Analyze Market</button>
+        <div id="results"></div>
+    </div>
 
-    <div id="results"></div>
+    <a href="../real-estate.html" class="back-link">← Back to Real Estate</a>
+</section>
 
- 
-</div>
-<a href="index.html">← Back to Real Estate</a>
-<!-- ===== Email Gate Modal ===== -->
+<!-- ===== Email Gate ===== -->
 <div id="emailModal" class="modal">
     <div class="modal-content">
         <h3>Unlock Market Trends</h3>
@@ -145,6 +169,10 @@ button:hover {
         <button onclick="submitEmail()">View Results</button>
     </div>
 </div>
+
+<footer>
+    © 2025 • Real Estate Market Trends
+</footer>
 
 <script>
 /* ===== CONFIG ===== */
@@ -175,14 +203,13 @@ function parseLocation(input) {
 
 /* ===== EMAIL GATE FLOW ===== */
 function openEmailGate() {
-    const locationInput = document.getElementById("location").value;
-
-    if (!locationInput) {
+    const value = document.getElementById("location").value;
+    if (!value) {
         alert("Please enter a ZIP code or city.");
         return;
     }
 
-    pendingLocation = parseLocation(locationInput);
+    pendingLocation = parseLocation(value);
 
     if (localStorage.getItem("emailCaptured")) {
         analyzeMarket();
@@ -219,15 +246,15 @@ function submitEmail() {
     .catch(() => alert("Submission error. Please try again."));
 }
 
-/* ===== RESULTS (DEMO DATA) ===== */
+/* ===== RESULTS (Demo Data) ===== */
 function analyzeMarket() {
-    const displayLocation =
+    const display =
         pendingLocation.zip ||
         `${pendingLocation.city}${pendingLocation.state ? ", " + pendingLocation.state : ""}`;
 
     document.getElementById("results").style.display = "block";
     document.getElementById("results").innerHTML = `
-        <h3>Market Trends for ${displayLocation}</h3>
+        <h3>Market Trends for ${display}</h3>
         <ul>
             <li>📈 Median home prices up ~4.3% YoY</li>
             <li>🏘️ Inventory remains below historical average</li>
@@ -238,10 +265,6 @@ function analyzeMarket() {
     `;
 }
 </script>
-
-<footer class="site-footer">
-    © 2025 · Market Trends
-</footer>
 
 </body>
 </html>
