@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Columbus Housing Market Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- Header -->
+    <div class="card">
+      <h1>🏡 Columbus Housing Market Dashboard</h1>
+      <p>
+        Interactive ZIP-level housing market trends for the Columbus, Ohio area —
+        built using <strong>Python</strong>, <strong>Redfin data</strong>, and
+        <strong>Tableau Public</strong>.
+      </p>
+
+      <ul>
+        <li>Compare ZIP codes</li>
+        <li>Track price trends over time</li>
+        <li>Explore supply & demand metrics</li>
+      </ul>
+    </div>
+
+    <!-- Screenshot Section -->
+    <div class="card">
+      <h2 class="section-title">📸 Dashboard Preview</h2>
+
+      <p>(Replace these images with your screenshots)</p>
+
+      <img src="images/dashboard_1.png" alt="Dashboard preview" class="img-full" />
+      <img src="images/dashboard_2.png" alt="ZIP filter example" class="img-full" />
+    </div>
+
+    <!-- Pipeline -->
+    <div class="card">
+      <h2 class="section-title">🔍 How This Project Works</h2>
+
+      <h3>1️⃣ Data Source — Redfin ZIP-Level Market Data</h3>
+      <p>
+        The dataset includes median home prices, inventory, homes sold, days on
+        market, and months of supply. Original files live in:
+      </p>
+
+      <pre><code>data/raw/</code></pre>
+
+      <h3>2️⃣ Data Cleaning — Python</h3>
+      <p>
+        Python scripts filter the Columbus metro area, remove invalid values, and
+        generate a clean dataset for visualization:
+      </p>
+
+      <pre><code>data/processed/columbus_oh_zipcodes.csv</code></pre>
+
+      <h3>3️⃣ Interactive Dashboard — Tableau Public</h3>
+      <p>
+        Tableau connects directly to the processed dataset and powers the
+        interactive charts and ZIP filters you see on the page.
+      </p>
+    </div>
+
+    <!-- Links -->
+    <div class="card">
+      <h2 class="section-title">🚀 View the Dashboard</h2>
+
+      <p><strong>GitHub Project:</strong> (add link)</p>
+      <p><strong>Tableau Dashboard:</strong> (add link)</p>
+    </div>
+
+    <!-- Structure -->
+    <div class="card">
+      <h2 class="section-title">🗂 Project Structure</h2>
+
+      <pre><code>
+project/
+├── data/
+│   ├── raw/
+│   └── processed/
+├── notebooks/
+│   ├── 01_data_cleaning.py
+│   └── 02_explore.ipynb
+├── index.html
+├── styles.css
+└── dashboard.html
+      </code></pre>
+    </div>
+
+    <!-- Future improvements -->
+    <div class="card">
+      <h2 class="section-title">🔮 Future Improvements</h2>
+
+      <ul>
+        <li>Add more cities (Buffalo, NYC, etc.)</li>
+        <li>Include rental data & affordability index</li>
+        <li>Automate monthly refresh using Python</li>
+        <li>Create Power BI version</li>
+        <li>Let users type ZIP codes dynamically</li>
+      </ul>
+    </div>
+
+    <!-- Summary -->
+    <div class="card">
+      <h2 class="section-title">💡 What This Demonstrates</h2>
+
+      <p>This project highlights:</p>
+
+      <ul>
+        <li>Real-world data collection</li>
+        <li>Cleaning + transforming data with Python</li>
+        <li>Designing meaningful metrics</li>
+        <li>Interactive dashboard building</li>
+        <li>Publishing data projects online</li>
+      </ul>
+    </div>
+
+  </div>
+
+</body>
+</html>
