@@ -67,3 +67,32 @@
             p.address ||
             [p.housenum, p.stname].filter(Boolean).join(' ') ||
             'N/A';
+
+          const popup = `
+            <div class="info-box">
+              <strong>Parcel</strong><br>
+              Address: ${address}<br>
+              ZIP: ${p.zip || 'N/A'}<br>
+              BBL: ${p.bbl || 'N/A'}<br>
+              Zoning: ${p.zonedist1 || p.zone || 'N/A'}<br>
+              Lot Area: ${p.lotarea || 'N/A'}<br>
+              Built FAR: ${p.builtfar || 'N/A'}<br>
+              Res FAR: ${p.residfar || 'N/A'}<br>
+              Comm FAR: ${p.commfar || 'N/A'}
+            </div>
+          `;
+
+          layer.bindPopup(popup);
+        }
+      }).addTo(map);
+
+      map.fitBounds(parcelLayer.getBounds());
+    })
+    .catch(err => {
+      console.error('Error loading GeoJSON:', err);
+      alert('Could not load bk_sample.geojson — check filename and path.');
+    });
+</script>
+
+</body>
+</html>
