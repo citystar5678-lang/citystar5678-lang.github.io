@@ -27,7 +27,7 @@
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
-    fetch("brooklyn_sample.geojson")
+    fetch("bk_sample.geojson")
       .then(r => r.json())
       .then(data => {
         L.geoJSON(data, {
