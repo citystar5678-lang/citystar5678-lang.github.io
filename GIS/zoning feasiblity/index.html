@@ -1,97 +1,69 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Parcel Viewer</title>
+  <title>Brooklyn Parcel Prototype</title>
 
-  <!-- Leaflet -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
     }
-
-    header {
-      padding: 12px 16px;
-      background: #0f172a;
-      color: white;
-    }
-
     #map {
-      height: calc(100vh - 56px);
       width: 100%;
+      height: 100vh;
     }
-
-    .leaflet-popup-content strong {
-      font-size: 14px;
+    .info-box {
+      background: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+      font-size: 13px;
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <h2>Parcel & Zoning Viewer</h2>
-  </header>
 
-  <div id="map"></div>
+<div id="map"></div>
 
-  <script>
-    // 1) Initialize the map
-    const map = L.map("map").setView([40.7128, -74.006], 12);
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    // 2) Basemap
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19
-    }).addTo(map);
+<script>
+  // Create the map centered on Brooklyn
+  const map = L.map('map').setView([40.6782, -73.9442], 14);
 
-    // 3) Load your GeoJSON (make sure filename matches)
-    fetch("parcels.geojson")
-      .then((res) => res.json())
-      .then((data) => {
-        const layer = L.geoJSON(data, {
-          style: () => ({
-            color: "#2563eb",
-            weight: 1,
-            fillOpacity: 0.15
-          }),
+  // Base map layer
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
 
-          onEachFeature: (feature, layer) => {
-            const p = feature.properties || {};
+  // Load Brooklyn sample parcels
+  fetch('bk_sample.geojson')
+    .then(res => res.json())
+    .then(data => {
 
-            // Build address (works whether you have "address"
-            // or housenum + stname)
-            const address =
-              p.address ||
-              [p.housenum, p.stname].filter(Boolean).join(" ") ||
-              "N/A";
+      const parcelLayer = L.geoJSON(data, {
+        style: () => ({
+          color: "#2563eb",
+          weight: 1,
+          fillOpacity: 0.25
+        }),
 
-            const popupHtml = `
-              <strong>Parcel</strong><br>
-              Address: ${address}<br>
-              ZIP: ${p.zip || "N/A"}<br>
-              Zoning: ${p.zone || p.zonedist1 || "N/A"}<br>
-              BBL: ${p.bbl || "N/A"}
-            `;
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties || {};
 
-            layer.bindPopup(popupHtml);
-          }
-        }).addTo(map);
-
-        // Optional: zoom to parcels
-        map.fitBounds(layer.getBounds());
-      })
-      .catch((err) => {
-        console.error("GeoJSON load error:", err);
-        alert("Could not load parcels.geojson — check filename/path.");
-      });
-  </script>
-</body>
-</html>
+          const address =
+            p.address ||
+            [p.housenum, p.stname].filter(Boolean).join(' ') ||
+            'N/A';
