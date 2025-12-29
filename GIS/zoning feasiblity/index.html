@@ -80,7 +80,7 @@
           style: feature => ({
             color: "#2a7fff", // border
             weight: 1,
-            fillOpacity: 0.5, // semi-transparent but more distinct
+            fillOpacity: 0.5,
             fillColor: getZoneColor(feature.properties.ZoneDist1)
           }),
           onEachFeature: (feature, layer) => {
@@ -113,6 +113,14 @@
 
         // Auto-zoom to the extent of the parcels
         map.fitBounds(parcelsLayer.getBounds());
+
+        // Highlight the full target area with purple outline
+        const targetBounds = parcelsLayer.getBounds();
+        L.rectangle(targetBounds, {
+          color: "#800080",
+          weight: 3,
+          fill: false
+        }).addTo(map);
 
         // Add simple legend
         const legend = L.control({position: "bottomleft"});
