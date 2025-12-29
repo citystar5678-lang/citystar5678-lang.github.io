@@ -11,6 +11,19 @@
     #map { height: 100vh; }
     .popup-title { font-weight: bold; margin-bottom: 4px; }
     .info-table td { padding: 2px 6px; }
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      line-height: 1.4;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    }
+    .legend div { margin-bottom: 4px; }
+    .legend-color { display: inline-block; width: 16px; height: 16px; margin-right: 6px; vertical-align: middle; }
   </style>
 </head>
 
@@ -29,14 +42,33 @@
       attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
-    // Function to assign a color based on zoning
+    // Zoning info lookup
+    const zoningInfo = {
+      "R4": { maxFAR: 1.35, maxHeight: "35 ft", use: "Residential, small community facilities" },
+      "R5": { maxFAR: 1.5, maxHeight: "40 ft", use: "Residential, community facilities" },
+      "R6": { maxFAR: 2.0, maxHeight: "60 ft", use: "Residential, some commercial at ground floor" },
+      "R7A": { maxFAR: 3.44, maxHeight: "60–80 ft", use: "Residential, contextual, some retail at ground" },
+      "R7B": { maxFAR: 4.0, maxHeight: "80 ft", use: "Residential, taller buildings allowed" },
+      "C1": { maxFAR: 2.0, maxHeight: "50–75 ft", use: "Neighborhood commercial" },
+      "C2": { maxFAR: 2.0, maxHeight: "50–75 ft", use: "Community shopping, local services" },
+      "M1": { maxFAR: 2.0, maxHeight: "50–75 ft", use: "Light industrial / warehouse" },
+      "PARK": { maxFAR: 0, maxHeight: "-", use: "Open space / park" }
+    };
+
+    // Distinct colors for zones
     function getZoneColor(zone) {
-      if(!zone) return "#aaaaaa"; // fallback color
-      if(zone.startsWith("R")) return "#ffeda0"; // residential
-      if(zone.startsWith("C")) return "#feb24c"; // commercial
-      if(zone.startsWith("M")) return "#f03b20"; // manufacturing
-      if(zone === "PARK") return "#74c476"; // parks
-      return "#2a7fff"; // default
+      switch(zone) {
+        case "R4": return "#ffe6e6";
+        case "R5": return "#ffcccc";
+        case "R6": return "#ff9999";
+        case "R7A": return "#ff6666";
+        case "R7B": return "#ff3333";
+        case "C1": return "#cce5ff";
+        case "C2": return "#99ccff";
+        case "M1": return "#ffcc99";
+        case "PARK": return "#99ff99";
+        default: return "#aaaaaa";
+      }
     }
 
     // Load Brooklyn sample GeoJSON
@@ -46,13 +78,15 @@
 
         const parcelsLayer = L.geoJSON(data, {
           style: feature => ({
-            color: "#2a7fff",             // border color
+            color: "#2a7fff", // border
             weight: 1,
-            fillOpacity: 0.4,             // semi-transparent fill
+            fillOpacity: 0.5, // semi-transparent but more distinct
             fillColor: getZoneColor(feature.properties.ZoneDist1)
           }),
           onEachFeature: (feature, layer) => {
             const p = feature.properties || {};
+            const zone = p.ZoneDist1 ?? "—";
+            const info = zoningInfo[zone] || { maxFAR: "—", maxHeight: "—", use: "—" };
 
             const popup = `
               <div class="popup">
@@ -61,22 +95,38 @@
                   <tr><td>BBL:</td><td>${p.BBL ?? "—"}</td></tr>
                   <tr><td>Address:</td><td>${p.Address ?? "—"}</td></tr>
                   <tr><td>ZIP:</td><td>${p.ZipCode ?? "—"}</td></tr>
-                  <tr><td>Zoning:</td><td>${p.ZoneDist1 ?? "—"}</td></tr>
+                  <tr><td>Zoning:</td><td>${zone}</td></tr>
                   <tr><td>Lot Area:</td><td>${p.LotArea ?? "—"}</td></tr>
                   <tr><td>Built FAR:</td><td>${p.BuiltFAR ?? "—"}</td></tr>
                   <tr><td>Res FAR:</td><td>${p.ResidFAR ?? "—"}</td></tr>
                   <tr><td>Comm FAR:</td><td>${p.CommFAR ?? "—"}</td></tr>
                   <tr><td>Facility FAR:</td><td>${p.FacilFAR ?? "—"}</td></tr>
+                  <tr><td>Max FAR:</td><td>${info.maxFAR}</td></tr>
+                  <tr><td>Max Height:</td><td>${info.maxHeight}</td></tr>
+                  <tr><td>Allowed Use:</td><td>${info.use}</td></tr>
                 </table>
               </div>
             `;
-
             layer.bindPopup(popup);
           },
         }).addTo(map);
 
         // Auto-zoom to the extent of the parcels
         map.fitBounds(parcelsLayer.getBounds());
+
+        // Add simple legend
+        const legend = L.control({position: "bottomleft"});
+        legend.onAdd = function() {
+          const div = L.DomUtil.create("div", "legend");
+          const zones = ["R4","R5","R6","R7A","R7B","C1","C2","M1","PARK"];
+          zones.forEach(z => {
+            const color = getZoneColor(z);
+            div.innerHTML += `<div><span class="legend-color" style="background:${color}"></span>${z}</div>`;
+          });
+          return div;
+        };
+        legend.addTo(map);
+
       })
       .catch(err => console.error("Failed to load GeoJSON:", err));
   </script>
