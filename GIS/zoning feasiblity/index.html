@@ -2,129 +2,58 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Brooklyn Parcel Feasibility</title>
+  <title>Brooklyn Parcel Viewer</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
   <style>
     body { margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100vh; }
     .popup-title { font-weight: bold; margin-bottom: 4px; }
     .info-table td { padding: 2px 6px; }
+
     .legend {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
       background: white;
-      padding: 10px;
-      border-radius: 4px;
-      font-size: 14px;
-      line-height: 1.4;
-      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+      padding: 8px 10px;
+      border-radius: 6px;
+      box-shadow: 0 0 6px rgba(0,0,0,.2);
+      font-size: 12px;
+      line-height: 16px;
     }
     .legend div { margin-bottom: 4px; }
-    .legend-color { display: inline-block; width: 16px; height: 16px; margin-right: 6px; vertical-align: middle; }
   </style>
 </head>
+
 <body>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
-    // Initialize map
-    const map = L.map("map").setView([40.6782, -73.9442], 14);
 
-    // Add OpenStreetMap tile layer
+  <script>
+    // Initialize map (temporary view — will auto-fit to parcels later)
+    const map = L.map("map").setView([40.6782, -73.9442], 13);
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution: "© OpenStreetMap contributors",
+      attribution: "© OpenStreetMap contributors"
     }).addTo(map);
 
-    // Zoning info lookup
-    const zoningInfo = {
-      "R2": { maxFAR: 0.5, maxHeight: "35 ft", use: "Low-density residential" },
-      "R3": { maxFAR: 0.75, maxHeight: "40 ft", use: "Low/medium-density residential" },
-      "R4": { maxFAR: 1.35, maxHeight: "35 ft", use: "Residential, small community facilities" },
-      "R5": { maxFAR: 1.5, maxHeight: "40 ft", use: "Residential, community facilities" },
-      "R6": { maxFAR: 2.0, maxHeight: "60 ft", use: "Residential, some commercial at ground floor" },
-      "R7A": { maxFAR: 3.44, maxHeight: "60–80 ft", use: "Residential, contextual, some retail at ground" },
-      "R7B": { maxFAR: 4.0, maxHeight: "80 ft", use: "Residential, taller buildings allowed" },
-      "C1": { maxFAR: 2.0, maxHeight: "50–75 ft", use: "Neighborhood commercial" },
-      "C2": { maxFAR: 2.0, maxHeight: "50–75 ft", use: "Community shopping, local services" },
-      "M1": { maxFAR: 2.0, maxHeight: "50–75 ft", use: "Light industrial / warehouse" },
-      "PARK": { maxFAR: 0, maxHeight: "-", use: "Open space / park" }
-    };
+    let parcelsLayer;
+    let shallowLayer;
+    let deepLayer;
 
-    // Colors for feasibility
-    function getFeasibilityColor(feasibility) {
-      switch(feasibility) {
-        case "High": return "#99ff99";
-        case "Medium": return "#ffff66";
-        case "Constrained": return "#ff6666";
-        default: return "#aaaaaa";
-      }
-    }
-
-    // Zoning fill color
-    function getZoneColor(zone) {
-      switch(zone) {
-        case "R2": return "#fff2e6";
-        case "R3": return "#ffe6cc";
-        case "R4": return "#ffe6e6";
-        case "R5": return "#ffcccc";
-        case "R6": return "#ff9999";
-        case "R7A": return "#ff6666";
-        case "R7B": return "#ff3333";
-        case "C1": return "#cce5ff";
-        case "C2": return "#99ccff";
-        case "M1": return "#ffcc99";
-        case "PARK": return "#99ff99";
-        default: return "#aaaaaa";
-      }
-    }
-
-    // Placeholder function: determine feasibility based on flood overlay
-    function getParcelFeasibility(parcel, floodLayer) {
-      let intersectsFlood = false;
-      floodLayer.eachLayer(layer => {
-        if (parcel.getBounds().intersects(layer.getBounds())) {
-          intersectsFlood = true;
-        }
-      });
-      if (intersectsFlood) return "Constrained";
-      return "High";
-    }
-
-    // Load flood overlay first
-    let floodLayer = null;
-    fetch("bk_flood.geojson")
-      .then(r => r.json())
-      .then(floodData => {
-        floodLayer = L.geoJSON(floodData, {
-          style: { color: "#1f78b4", fillOpacity: 0.3 }
-        }).addTo(map);
-
-        // Load parcels
-        return fetch("bk_sample.geojson");
-      })
+    // ----- 1) Parcels -----
+    fetch("bk_sample.geojson")
       .then(r => r.json())
       .then(data => {
-        const parcelsLayer = L.geoJSON(data, {
-          style: feature => ({
+        parcelsLayer = L.geoJSON(data, {
+          style: () => ({
             color: "#2a7fff",
             weight: 1,
-            fillOpacity: 0.7,
-            fillColor: getZoneColor(feature.properties.ZoneDist1)
+            fillOpacity: 0.25
           }),
           onEachFeature: (feature, layer) => {
             const p = feature.properties || {};
-            const zone = p.ZoneDist1 ?? "—";
-            const info = zoningInfo[zone] || { maxFAR: "—", maxHeight: "—", use: "—" };
-
-            // Determine feasibility
-            const feasibility = getParcelFeasibility(layer, floodLayer);
-
-            // Set parcel color by feasibility
-            layer.setStyle({ fillColor: getFeasibilityColor(feasibility) });
 
             const popup = `
               <div class="popup">
@@ -133,16 +62,12 @@
                   <tr><td>BBL:</td><td>${p.BBL ?? "—"}</td></tr>
                   <tr><td>Address:</td><td>${p.Address ?? "—"}</td></tr>
                   <tr><td>ZIP:</td><td>${p.ZipCode ?? "—"}</td></tr>
-                  <tr><td>Zoning:</td><td>${zone}</td></tr>
+                  <tr><td>Zoning:</td><td>${p.ZoneDist1 ?? "—"}</td></tr>
                   <tr><td>Lot Area:</td><td>${p.LotArea ?? "—"}</td></tr>
                   <tr><td>Built FAR:</td><td>${p.BuiltFAR ?? "—"}</td></tr>
                   <tr><td>Res FAR:</td><td>${p.ResidFAR ?? "—"}</td></tr>
                   <tr><td>Comm FAR:</td><td>${p.CommFAR ?? "—"}</td></tr>
                   <tr><td>Facility FAR:</td><td>${p.FacilFAR ?? "—"}</td></tr>
-                  <tr><td>Max FAR:</td><td>${info.maxFAR}</td></tr>
-                  <tr><td>Max Height:</td><td>${info.maxHeight}</td></tr>
-                  <tr><td>Allowed Use:</td><td>${info.use}</td></tr>
-                  <tr><td>Feasibility:</td><td>${feasibility}</td></tr>
                 </table>
               </div>
             `;
@@ -150,25 +75,74 @@
           }
         }).addTo(map);
 
+        // Auto-zoom to project extent
         map.fitBounds(parcelsLayer.getBounds());
-
-        // Layer control
-        L.control.layers(null, { "Flood Zone": floodLayer }).addTo(map);
-
-        // Dynamic legend for feasibility
-        const legend = L.control({position: "bottomleft"});
-        legend.onAdd = function() {
-          const div = L.DomUtil.create("div", "legend");
-          ["High","Medium","Constrained"].forEach(f => {
-            div.innerHTML += `<div><span class="legend-color" style="background:${getFeasibilityColor(f)}"></span>${f}</div>`;
-          });
-          return div;
-        };
-        legend.addTo(map);
       })
-      .catch(err => console.error("Failed to load GeoJSON:", err));
+      .catch(err => console.error("Failed to load parcels:", err));
+
+
+    // ----- 2) Shallow Flooding -----
+    fetch("shallow_flooding.geojson")
+      .then(r => r.json())
+      .then(data => {
+        shallowLayer = L.geoJSON(data, {
+          style: {
+            color: "#ffd966",
+            weight: 1,
+            fillOpacity: 0.25
+          }
+        }).addTo(map);
+        updateLayerControl();
+      })
+      .catch(err => console.error("Failed to load shallow flooding:", err));
+
+
+    // ----- 3) Deeper Flooding -----
+    fetch("deeper_flooding.geojson")
+      .then(r => r.json())
+      .then(data => {
+        deepLayer = L.geoJSON(data, {
+          style: {
+            color: "#d9534f",
+            weight: 1,
+            fillOpacity: 0.30
+          }
+        }).addTo(map);
+        updateLayerControl();
+      })
+      .catch(err => console.error("Failed to load deeper flooding:", err));
+
+
+    // ----- 4) Layer toggle control -----
+    let control = null;
+    function updateLayerControl() {
+      if (control) map.removeControl(control);
+
+      control = L.control.layers(
+        { "Parcels": parcelsLayer },
+        {
+          "Shallow Flooding": shallowLayer,
+          "Deeper Flooding": deepLayer
+        },
+        { collapsed: false }
+      ).addTo(map);
+    }
+
+    // ----- 5) Legend -----
+    const legend = L.control({ position: "bottomright" });
+
+    legend.onAdd = function () {
+      const div = L.DomUtil.create("div", "legend");
+      div.innerHTML = `
+        <div><strong>Flood Depth</strong></div>
+        <div><span style="background:#ffd966;display:inline-block;width:14px;height:14px;margin-right:6px;"></span>Shallow</div>
+        <div><span style="background:#d9534f;display:inline-block;width:14px;height:14px;margin-right:6px;"></span>Deeper</div>
+      `;
+      return div;
+    };
+
+    legend.addTo(map);
   </script>
 </body>
 </html>
-
 
