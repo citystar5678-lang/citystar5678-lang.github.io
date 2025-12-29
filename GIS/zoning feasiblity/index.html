@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Brooklyn Parcel Viewer</title>
+  <title>Brooklyn Parcel Feasibility</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
   <style>
     body { margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100vh; }
@@ -26,12 +25,10 @@
     .legend-color { display: inline-block; width: 16px; height: 16px; margin-right: 6px; vertical-align: middle; }
   </style>
 </head>
-
 <body>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
     // Initialize map
     const map = L.map("map").setView([40.6782, -73.9442], 14);
@@ -57,7 +54,17 @@
       "PARK": { maxFAR: 0, maxHeight: "-", use: "Open space / park" }
     };
 
-    // Distinct colors for zones
+    // Colors for feasibility
+    function getFeasibilityColor(feasibility) {
+      switch(feasibility) {
+        case "High": return "#99ff99";
+        case "Medium": return "#ffff66";
+        case "Constrained": return "#ff6666";
+        default: return "#aaaaaa";
+      }
+    }
+
+    // Zoning fill color
     function getZoneColor(zone) {
       switch(zone) {
         case "R2": return "#fff2e6";
@@ -75,22 +82,49 @@
       }
     }
 
-    // Load Brooklyn sample GeoJSON
-    fetch("bk_sample.geojson")
+    // Placeholder function: determine feasibility based on flood overlay
+    function getParcelFeasibility(parcel, floodLayer) {
+      let intersectsFlood = false;
+      floodLayer.eachLayer(layer => {
+        if (parcel.getBounds().intersects(layer.getBounds())) {
+          intersectsFlood = true;
+        }
+      });
+      if (intersectsFlood) return "Constrained";
+      return "High";
+    }
+
+    // Load flood overlay first
+    let floodLayer = null;
+    fetch("bk_flood.geojson")
+      .then(r => r.json())
+      .then(floodData => {
+        floodLayer = L.geoJSON(floodData, {
+          style: { color: "#1f78b4", fillOpacity: 0.3 }
+        }).addTo(map);
+
+        // Load parcels
+        return fetch("bk_sample.geojson");
+      })
       .then(r => r.json())
       .then(data => {
-
         const parcelsLayer = L.geoJSON(data, {
           style: feature => ({
             color: "#2a7fff",
             weight: 1,
-            fillOpacity: 0.5,
+            fillOpacity: 0.7,
             fillColor: getZoneColor(feature.properties.ZoneDist1)
           }),
           onEachFeature: (feature, layer) => {
             const p = feature.properties || {};
             const zone = p.ZoneDist1 ?? "—";
             const info = zoningInfo[zone] || { maxFAR: "—", maxHeight: "—", use: "—" };
+
+            // Determine feasibility
+            const feasibility = getParcelFeasibility(layer, floodLayer);
+
+            // Set parcel color by feasibility
+            layer.setStyle({ fillColor: getFeasibilityColor(feasibility) });
 
             const popup = `
               <div class="popup">
@@ -108,33 +142,33 @@
                   <tr><td>Max FAR:</td><td>${info.maxFAR}</td></tr>
                   <tr><td>Max Height:</td><td>${info.maxHeight}</td></tr>
                   <tr><td>Allowed Use:</td><td>${info.use}</td></tr>
+                  <tr><td>Feasibility:</td><td>${feasibility}</td></tr>
                 </table>
               </div>
             `;
             layer.bindPopup(popup);
-          },
+          }
         }).addTo(map);
 
-        // Auto-zoom to the extent of the parcels
         map.fitBounds(parcelsLayer.getBounds());
 
-        // Dynamic legend based on zones present in the GeoJSON
+        // Layer control
+        L.control.layers(null, { "Flood Zone": floodLayer }).addTo(map);
+
+        // Dynamic legend for feasibility
         const legend = L.control({position: "bottomleft"});
         legend.onAdd = function() {
           const div = L.DomUtil.create("div", "legend");
-          // Get all unique ZoneDist1 values in the data
-          const uniqueZones = [...new Set(data.features.map(f => f.properties.ZoneDist1))];
-          uniqueZones.forEach(z => {
-            const color = getZoneColor(z);
-            div.innerHTML += `<div><span class="legend-color" style="background:${color}"></span>${z}</div>`;
+          ["High","Medium","Constrained"].forEach(f => {
+            div.innerHTML += `<div><span class="legend-color" style="background:${getFeasibilityColor(f)}"></span>${f}</div>`;
           });
           return div;
         };
         legend.addTo(map);
-
       })
       .catch(err => console.error("Failed to load GeoJSON:", err));
   </script>
 </body>
 </html>
+
 
