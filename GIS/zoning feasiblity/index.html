@@ -2,99 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Brooklyn Parcel Viewer</title>
+  <title>Brooklyn Parcel Viewer — Feasibility</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
   <style>
     body { margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100vh; }
     .popup-title { font-weight: bold; margin-bottom: 4px; }
     .info-table td { padding: 2px 6px; }
-
-    .legend {
-      background: white;
-      padding: 8px 10px;
-      border-radius: 6px;
-      box-shadow: 0 0 6px rgba(0,0,0,.2);
-      font-size: 12px;
-      line-height: 16px;
-      margin-bottom: 6px;
-    }
-    .legend div { margin-bottom: 4px; }
-    .swatch {
-      display:inline-block;
-      width:14px;
-      height:14px;
-      margin-right:6px;
-      border:1px solid #999;
-    }
+    .legend { background: white; padding: 6px 10px; line-height: 18px; color: #333; }
+    .legend i { width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
   </style>
 </head>
-
 <body>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
-    const map = L.map("map").setView([40.6782, -73.9442], 13);
+    // Initialize map
+    const map = L.map("map").setView([40.6782, -73.9442], 14);
 
+    // Add OpenStreetMap tile layer
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution: "© OpenStreetMap contributors"
+      attribution: "© OpenStreetMap contributors",
     }).addTo(map);
 
-    // -------- ZONING COLOR LOGIC --------
-    function zoneCategory(code = "") {
-      code = String(code).toUpperCase();
-
-      if (code.startsWith("R1") || code.startsWith("R2") || code.startsWith("R3"))
-        return "Low-density Residential";
-      if (code.startsWith("R4") || code.startsWith("R5") || code.startsWith("R6"))
-        return "Medium Residential";
-      if (code.startsWith("R7") || code.startsWith("R8") || code.startsWith("R9") || code.startsWith("R10"))
-        return "High Residential";
-      if (code.startsWith("C"))
-        return "Commercial";
-      if (code.startsWith("M"))
-        return "Manufacturing";
-      if (code.includes("/"))
-        return "Mixed M/R";
-      if (code === "PARK")
-        return "Park / Open Space";
-      return "Other";
-    }
-
-    const zoneColors = {
-      "Low-density Residential":  "#b7e3a2",
-      "Medium Residential":       "#7fc97f",
-      "High Residential":         "#3f9142",
-      "Commercial":               "#6fa8dc",
-      "Manufacturing":            "#f4a261",
-      "Mixed M/R":                "#c39bd3",
-      "Park / Open Space":        "#d0d0d0",
-      "Other":                    "#9e9e9e"
+    // Feasibility colors
+    const feasibilityColors = {
+      'High': '#2ecc71',      // green
+      'Medium': '#f1c40f',    // yellow
+      'Constrained': '#e74c3c' // red
     };
 
-    let parcelsLayer, shallowLayer, deepLayer;
-
-    // -------- 1) PARCELS --------
-    fetch("bk_sample.geojson")
+    // Load Brooklyn feasibility GeoJSON
+    fetch("bk_feasibility.geojson")
       .then(r => r.json())
       .then(data => {
-        parcelsLayer = L.geoJSON(data, {
-          style: feature => {
-            const cat = zoneCategory(feature.properties?.ZoneDist1);
-            return {
-              color: "#555",
-              weight: 1,
-              fillColor: zoneColors[cat],
-              fillOpacity: 0.35
-            };
-          },
+
+        const parcelsLayer = L.geoJSON(data, {
+          style: feature => ({
+            color: "#555",
+            weight: 1,
+            fillColor: feasibilityColors[feature.properties.feasibility] || '#ccc',
+            fillOpacity: 0.5
+          }),
           onEachFeature: (feature, layer) => {
             const p = feature.properties || {};
+
             const popup = `
               <div class="popup">
                 <div class="popup-title">Parcel</div>
@@ -108,65 +63,31 @@
                   <tr><td>Res FAR:</td><td>${p.ResidFAR ?? "—"}</td></tr>
                   <tr><td>Comm FAR:</td><td>${p.CommFAR ?? "—"}</td></tr>
                   <tr><td>Facility FAR:</td><td>${p.FacilFAR ?? "—"}</td></tr>
+                  <tr><td>Feasibility:</td><td>${p.feasibility ?? "—"}</td></tr>
                 </table>
-              </div>`;
+              </div>
+            `;
             layer.bindPopup(popup);
           }
         }).addTo(map);
 
+        // Auto-zoom to the extent of the parcels
         map.fitBounds(parcelsLayer.getBounds());
-      });
 
-    // -------- 2) SHALLOW FLOOD --------
-    fetch("shallow_flooding.geojson")
-      .then(r => r.json())
-      .then(data => {
-        shallowLayer = L.geoJSON(data, {
-          style: { color: "#ffd966", weight: 1, fillOpacity: 0.25 }
-        }).addTo(map);
-        updateLayerControl();
-      });
+        // Add legend
+        const legend = L.control({position: 'bottomright'});
+        legend.onAdd = function() {
+          const div = L.DomUtil.create('div', 'legend');
+          div.innerHTML = '<b>Feasibility</b><br>';
+          for (const key in feasibilityColors) {
+            div.innerHTML += `<i style="background:${feasibilityColors[key]}"></i>${key}<br>`;
+          }
+          return div;
+        };
+        legend.addTo(map);
 
-    // -------- 3) DEEP FLOOD --------
-    fetch("deeper_flooding.geojson")
-      .then(r => r.json())
-      .then(data => {
-        deepLayer = L.geoJSON(data, {
-          style: { color: "#d9534f", weight: 1, fillOpacity: 0.30 }
-        }).addTo(map);
-        updateLayerControl();
-      });
-
-    // -------- 4) LAYER CONTROL --------
-    let control = null;
-    function updateLayerControl() {
-      if (control) map.removeControl(control);
-      control = L.control.layers(
-        { "Parcels (Zoning)": parcelsLayer },
-        { "Shallow Flooding": shallowLayer, "Deeper Flooding": deepLayer },
-        { collapsed: false }
-      ).addTo(map);
-    }
-
-    // -------- 5) LEGENDS --------
-    const legend = L.control({ position: "bottomright" });
-    legend.onAdd = function () {
-      const div = L.DomUtil.create("div");
-      div.innerHTML = `
-        <div class="legend">
-          <strong>Zoning</strong><br/>
-          ${Object.entries(zoneColors).map(
-            ([k,v]) => `<div><span class="swatch" style="background:${v}"></span>${k}</div>`
-          ).join("")}
-        </div>
-        <div class="legend">
-          <strong>Flood Depth</strong><br/>
-          <div><span class="swatch" style="background:#ffd966"></span>Shallow</div>
-          <div><span class="swatch" style="background:#d9534f"></span>Deeper</div>
-        </div>`;
-      return div;
-    };
-    legend.addTo(map);
+      })
+      .catch(err => console.error("Failed to load GeoJSON:", err));
   </script>
 </body>
 </html>
