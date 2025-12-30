@@ -61,8 +61,8 @@
     }
 
     // ------------------ FLOOD LAYERS ------------------
-    const shallow = L.geoJSON(null, { style:{color:"#3fa7f5",weight:1,fillOpacity:.25}, interactive:false }).addTo(map);
-    const deep = L.geoJSON(null, { style:{color:"#1b6cc2",weight:1,fillOpacity:.35}, interactive:false }).addTo(map);
+    const shallow = L.geoJSON(null, { style:{color:"#3fa7f5",weight:1,fillOpacity:.25}, interactive:false });
+    const deep = L.geoJSON(null, { style:{color:"#1b6cc2",weight:1,fillOpacity:.35}, interactive:false });
 
     Promise.all([
       fetch("shallow_flooding.geojson").then(r=>r.json()),
@@ -73,15 +73,19 @@
     });
 
     // ------------------ PARCELS ------------------
+    let feasibilityLayer, zoningOutlineLayer;
+
     fetch("bk_feasibility.geojson")
       .then(r=>r.json())
       .then(data=>{
-        const parcelsLayer = L.geoJSON(data,{
+
+        // Feasibility fill
+        feasibilityLayer = L.geoJSON(data,{
           style:f=>({
-            color:getZoningColor(f.properties?.ZoneDist1), // outline
-            weight:1,
-            fillColor:getFeasibilityColor(f.properties?.feasibility), // fill by feasibility
-            fillOpacity:0.45
+            fillColor:getFeasibilityColor(f.properties?.feasibility),
+            fillOpacity:0.45,
+            color:"#555",
+            weight:0.5
           }),
           onEachFeature:(feature,layer)=>{
             const p = feature.properties || {};
@@ -117,7 +121,26 @@
           }
         }).addTo(map);
 
-        map.fitBounds(parcelsLayer.getBounds());
+        // Zoning outlines
+        zoningOutlineLayer = L.geoJSON(data,{
+          style:f=>({
+            color:getZoningColor(f.properties?.ZoneDist1),
+            weight:1,
+            fillOpacity:0
+          })
+        }).addTo(map);
+
+        map.fitBounds(feasibilityLayer.getBounds());
+
+        // ------------------ LAYER CONTROLS ------------------
+        const overlays = {
+          "Shallow Flooding": shallow,
+          "Deep Flooding": deep,
+          "Feasibility": feasibilityLayer,
+          "Zoning Outlines": zoningOutlineLayer
+        };
+        L.control.layers(null, overlays, {collapsed:false}).addTo(map);
+
       })
       .catch(err=>console.error("Failed to load GeoJSON:", err));
 
@@ -134,14 +157,13 @@
       Object.keys(zoningColors).forEach(k=>{
         div.innerHTML += `<div><span style="background:${zoningColors[k]}"></span>${k}</div>`;
       });
-      div.innerHTML += `
-        <hr style="margin:6px 0" />
-        <div><span style="background:#3fa7f5"></span>Shallow flooding</div>
-        <div><span style="background:#1b6cc2"></span>Deep flooding</div>
-      `;
+      div.innerHTML += `<hr style="margin:6px 0" />`;
+      div.innerHTML += `<div><span style="background:#3fa7f5"></span>Shallow flooding</div>`;
+      div.innerHTML += `<div><span style="background:#1b6cc2"></span>Deep flooding</div>`;
       return div;
     };
     legend.addTo(map);
   </script>
 </body>
 </html>
+
