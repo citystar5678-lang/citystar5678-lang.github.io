@@ -170,7 +170,7 @@
       .catch(err=>console.error("Failed to load GeoJSON:", err));
 
     // ------------------ LEGEND ------------------
-    const legend = L.control({position:"bottomright"});
+    const legend = L.control({position:"bottomleft"});
     legend.onAdd=function(){
       const div = L.DomUtil.create("div","legend");
       div.innerHTML = "<b>Feasibility</b><br/>";
@@ -197,3 +197,4 @@
   </script>
 </body>
 </html>
+
