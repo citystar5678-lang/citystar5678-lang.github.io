@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Brooklyn Parcel Buildable Envelope Viewer</title>
+  <title>Brooklyn Parcel Feasibility Viewer</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
@@ -60,14 +60,6 @@
       return "#9e9e9e";
     }
 
-    // ------------------ BUILDABLE SF COLORS ------------------
-    function getBuildableColor(sf) {
-      if (!sf) return "#999";
-      if (sf > 20000) return "#1e8449";
-      if (sf > 10000) return "#f39c12";
-      return "#c0392b";
-    }
-
     // ------------------ FLOOD LAYERS ------------------
     const shallow = L.geoJSON(null, { style:{color:"#3fa7f5",weight:1,fillOpacity:.25}, interactive:false });
     const deep = L.geoJSON(null, { style:{color:"#1b6cc2",weight:1,fillOpacity:.35}, interactive:false });
@@ -83,13 +75,14 @@
     // ------------------ PARCELS ------------------
     let feasibilityLayer, zoningOutlineLayer;
 
-    fetch("bk_buildable.geojson")
+    fetch("bk_feasibility.geojson")
       .then(r=>r.json())
       .then(data=>{
-        // Feasibility / Buildable fill layer
+
+        // Feasibility fill
         feasibilityLayer = L.geoJSON(data,{
           style:f=>({
-            fillColor:getBuildableColor(f.properties?.buildable_sf),
+            fillColor:getFeasibilityColor(f.properties?.feasibility),
             fillOpacity:0.45,
             color:"#555",
             weight:0.5
@@ -107,7 +100,7 @@
                   <tr><td>Zoning:</td><td>${p.ZoneDist1 ?? "—"}</td></tr>
                   <tr><td>Lot Area:</td><td>${p.LotArea ?? "—"}</td></tr>
                   <tr><td>Max FAR:</td><td>${p.max_far ?? "—"}</td></tr>
-                  <tr><td>Buildable SF:</td><td>${p.buildable_sf ?? "—"}</td></tr>
+                  <tr><td>Est. Units:</td><td>${p.est_units ?? "—"}</td></tr>
                   <tr>
                     <td>Feasibility:</td>
                     <td>
@@ -126,32 +119,28 @@
               </div>`;
             layer.bindPopup(popup);
           }
-        });
+        }).addTo(map);
 
-        // Zoning outlines layer
+        // Zoning outlines
         zoningOutlineLayer = L.geoJSON(data,{
           style:f=>({
             color:getZoningColor(f.properties?.ZoneDist1),
             weight:1,
             fillOpacity:0
           })
-        });
+        }).addTo(map);
+
+        map.fitBounds(feasibilityLayer.getBounds());
 
         // ------------------ LAYER CONTROLS ------------------
         const overlays = {
           "Shallow Flooding": shallow,
           "Deep Flooding": deep,
-          "Buildable Envelope": feasibilityLayer,
+          "Feasibility": feasibilityLayer,
           "Zoning Outlines": zoningOutlineLayer
         };
         L.control.layers(null, overlays, {collapsed:false}).addTo(map);
 
-        // Add default visible layers
-        feasibilityLayer.addTo(map);
-        zoningOutlineLayer.addTo(map);
-
-        // Zoom to study area
-        map.fitBounds(feasibilityLayer.getBounds());
       })
       .catch(err=>console.error("Failed to load GeoJSON:", err));
 
@@ -159,10 +148,10 @@
     const legend = L.control({position:"bottomright"});
     legend.onAdd=function(){
       const div = L.DomUtil.create("div","legend");
-      div.innerHTML = "<b>Feasibility / Buildable SF</b><br/>";
-      div.innerHTML += `<div><span style="background:#c0392b"></span>Low Buildable SF</div>`;
-      div.innerHTML += `<div><span style="background:#f39c12"></span>Medium Buildable SF</div>`;
-      div.innerHTML += `<div><span style="background:#1e8449"></span>High Buildable SF</div>`;
+      div.innerHTML = "<b>Feasibility</b><br/>";
+      div.innerHTML += `<div><span style="background:#27ae60"></span>High</div>`;
+      div.innerHTML += `<div><span style="background:#e6a100"></span>Medium</div>`;
+      div.innerHTML += `<div><span style="background:#c0392b"></span>Constrained</div>`;
       div.innerHTML += `<hr style="margin:6px 0" />`;
       div.innerHTML += "<b>Zoning (outline)</b><br/>";
       Object.keys(zoningColors).forEach(k=>{
@@ -177,5 +166,3 @@
   </script>
 </body>
 </html>
-
-
