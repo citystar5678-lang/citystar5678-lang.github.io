@@ -45,7 +45,7 @@
       "R1": "#4b7bec", "R2": "#3867d6", "R3": "#45aaf2",
       "R4": "#26de81", "R5": "#20bf6b", "R6": "#f7b731",
       "R7": "#fa8231", "R7A": "#f39c12", "R8": "#eb3b5a",
-      "R9": "#8854d0", "C": "#a55eea"
+      "R9": "#8854d0", "C":  "#a55eea"
     };
     function getZoningColor(zone) {
       if (!zone) return "#9e9e9e";
@@ -63,7 +63,7 @@
 
     // ------------------ FLOOD LAYERS ------------------
     const shallow = L.geoJSON(null, { style:{color:"#3fa7f5",weight:1,fillOpacity:.25}, interactive:false });
-    const deep = L.geoJSON(null, { style:{color:"#1b6cc2",weight:1,fillOpacity:.35}, interactive:false });
+    const deep   = L.geoJSON(null, { style:{color:"#1b6cc2",weight:1,fillOpacity:.35}, interactive:false });
 
     Promise.all([
       fetch("shallow_flooding.geojson").then(r=>r.json()),
@@ -80,37 +80,50 @@
       .then(r=>r.json())
       .then(data=>{
 
-        // Feasibility fill
         feasibilityLayer = L.geoJSON(data,{
-          style:f=>({
-            fillColor:getFeasibilityColor(f.properties?.feasibility),
-            fillOpacity:0.45,
-            color:"#555",
-            weight:0.5
-          }),
+          style:f=>{
+            const p = f.properties || {};
+            const dev = p.dev_status;
+
+            // If not developable — dim and gray
+            if (dev && dev.startsWith("Not Developable")) {
+              return {
+                fillColor: "#bfbfbf",
+                fillOpacity: 0.25,
+                color: "#7a7a7a",
+                weight: 0.6
+              };
+            }
+
+            // Otherwise color by feasibility
+            return {
+              fillColor: getFeasibilityColor(p.feasibility),
+              fillOpacity: 0.45,
+              color: "#555",
+              weight: 0.5
+            };
+          },
+
           onEachFeature:(feature,layer)=>{
             const p = feature.properties || {};
             const badgeColor = getFeasibilityColor(p.feasibility);
 
             const popup = `
               <div class="popup">
-                <div class="popup-title">Parcel Details</div>
+                <div class="popup-title">Parcel</div>
 
                 <table class="info-table">
                   <tr><td>BBL:</td><td>${p.BBL ?? "—"}</td></tr>
                   <tr><td>Address:</td><td>${p.Address ?? "—"}</td></tr>
-                  <tr><td>ZIP:</td><td>${p.ZipCode ?? "—"}</td></tr>
                   <tr><td>Zoning:</td><td>${p.ZoneDist1 ?? "—"}</td></tr>
 
-                  <tr><td>Lot Area:</td><td>${p.LotArea?.toLocaleString?.() ?? "—"}</td></tr>
+                  <tr><td>Lot Area:</td><td>${p.LotArea ?? "—"}</td></tr>
                   <tr><td>Max FAR:</td><td>${p.max_far ?? "—"}</td></tr>
-                  <tr><td>Max Floor Area:</td><td>${p.max_floor_area?.toLocaleString?.() ?? "—"}</td></tr>
+                  <tr><td>Max Floor Area:</td><td>${p.max_floor_area ?? "—"}</td></tr>
+                  <tr><td>Buildable SF:</td><td>${p.buildable_sf ?? "—"}</td></tr>
+                  <tr><td>Est. Units:</td><td>${p.est_units ?? "—"}</td></tr>
 
-                  <tr><td><b>Buildable SF:</b></td>
-                      <td><b>${p.buildable_sf?.toLocaleString?.() ?? "—"}</b></td></tr>
-
-                  <tr><td><b>Estimated Units:</b></td>
-                      <td><b>${p.est_units ?? "—"}</b></td></tr>
+                  <tr><td>Development Status:</td><td>${p.dev_status ?? "—"}</td></tr>
 
                   <tr>
                     <td>Feasibility:</td>
@@ -128,16 +141,15 @@
                   </tr>
                 </table>
 
-                <div style="margin-top:6px;color:#666;font-size:12px;">
-                  Estimate assumes <b>80% efficiency</b> and ~<b>900 sq ft/unit</b>.
+                <div style="margin-top:6px;font-size:12px;color:#666;">
+                  Estimate assumes ~80% efficiency and ~900 sq ft per unit.
                 </div>
-              </div>`;
 
+              </div>`;
             layer.bindPopup(popup);
           }
         }).addTo(map);
 
-        // Zoning outlines
         zoningOutlineLayer = L.geoJSON(data,{
           style:f=>({
             color:getZoningColor(f.properties?.ZoneDist1),
@@ -148,14 +160,12 @@
 
         map.fitBounds(feasibilityLayer.getBounds());
 
-        // ------------------ LAYER CONTROLS ------------------
-        const overlays = {
+        L.control.layers(null, {
           "Shallow Flooding": shallow,
           "Deep Flooding": deep,
           "Feasibility": feasibilityLayer,
           "Zoning Outlines": zoningOutlineLayer
-        };
-        L.control.layers(null, overlays, {collapsed:false}).addTo(map);
+        }, {collapsed:false}).addTo(map);
       })
       .catch(err=>console.error("Failed to load GeoJSON:", err));
 
@@ -167,11 +177,17 @@
       div.innerHTML += `<div><span style="background:#27ae60"></span>High</div>`;
       div.innerHTML += `<div><span style="background:#e6a100"></span>Medium</div>`;
       div.innerHTML += `<div><span style="background:#c0392b"></span>Constrained</div>`;
+
+      div.innerHTML += `<hr style="margin:6px 0" />`;
+      div.innerHTML += "<b>Not developable</b><br/>";
+      div.innerHTML += `<div><span style="background:#bfbfbf"></span>Public / facility / parks</div>`;
+
       div.innerHTML += `<hr style="margin:6px 0" />`;
       div.innerHTML += "<b>Zoning (outline)</b><br/>";
       Object.keys(zoningColors).forEach(k=>{
         div.innerHTML += `<div><span style="background:${zoningColors[k]}"></span>${k}</div>`;
       });
+
       div.innerHTML += `<hr style="margin:6px 0" />`;
       div.innerHTML += `<div><span style="background:#3fa7f5"></span>Shallow flooding</div>`;
       div.innerHTML += `<div><span style="background:#1b6cc2"></span>Deep flooding</div>`;
@@ -181,4 +197,3 @@
   </script>
 </body>
 </html>
-
