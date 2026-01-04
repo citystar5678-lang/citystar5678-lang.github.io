@@ -1,7 +1,0 @@
-{
-  "name": "CircuitGuard AI - Electronic Defect Detector",
-  "description": "An industrial-grade AI tool for identifying defects in electronic components and PCBs using advanced visual analysis.",
-  "requestFramePermissions": [
-    "camera"
-  ]
-}
